@@ -94,10 +94,12 @@
 import { ref } from "vue";
 import postcodeMapping from "./assets/postcodeMapping.json";
 
+/** @typedef {{ accountNumber: string, salesOrder: string, lineNumber: string, provisionedNumber?: string }} Account */
+
 const date = new Date();
 const today = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-/** @type {import("vue").Ref<{ [area: string]: { provisionedNumber?: string, accountNumber: number, salesOrder: number, postCode: string, numbersRequired: number }[] }>} */
+/** @type {import("vue").Ref<{ [area: string]: Account[] }>} */
 const accountsByArea = ref({});
 
 const provisioningListErrors = ref([]);
@@ -111,12 +113,13 @@ function parseRawList(text) {
   const regex =
     /^(\d+)\s+(\d+)\s+(?:Line\s+\d\s+Missing\s+){1,2}([a-z]{1,2}\d{1,2}\s\d[a-z]{2})$/i;
 
+  /** @type {string[]} */
   const lines = text
     .split("\n")
     .map((value) => value.trim())
     .filter((value) => value);
 
-  /** @type {{ [area: string]: { accountNumber: number, salesOrder: number, postCode: string, numbersRequired: number }[] }} */
+  /** @type {{ [area: string]: Account[] }} */
   const accountsPerAreaCode = {};
 
   provisioningListErrors.value = [];
@@ -147,6 +150,7 @@ function parseRawList(text) {
         );
       }
 
+      /** @type {[string, number]} */
       const [areaName, areaCode] = postcodeMapping[postCodeArea[0]];
 
       // TODO: check if numbers are correct, not e.g. line 1 and line 1 missing
@@ -172,11 +176,7 @@ function parseRawList(text) {
         accountsPerAreaCode[globalAreaCode].push({
           accountNumber,
           salesOrder,
-          postCode,
           lineNumber,
-          globalAreaCode,
-          areaCode,
-          areaName,
         });
       }
     } catch (error) {
@@ -222,7 +222,7 @@ function updateLines(text, accounts, globalAreaCode) {
 }
 
 /**
- * @param {{ provisionedNumber?: string, accountNumber: string, salesOrder: string }[]} accounts
+ * @param {Account[]} accounts
  */
 function formatLines(accounts) {
   return accounts
@@ -238,7 +238,9 @@ function updateFinalList() {
     .flat()
     .map(
       ({ accountNumber, salesOrder, provisionedNumber, lineNumber }) =>
-        `${accountNumber} ${salesOrder} ${provisionedNumber || ""} ${lineNumber} NEW`
+        `${accountNumber} ${salesOrder} ${
+          provisionedNumber || ""
+        } ${lineNumber} NEW`
     )
     .join("\n");
 }
