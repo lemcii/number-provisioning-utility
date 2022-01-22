@@ -1,11 +1,11 @@
 <template>
   <div class="p-8">
-    <h1 class="text-gray-50 text-xl font-semibold mb-8">
-      <span class="font-bold">Karl's</span> Number Provisioning Utility
+    <h1 class="text-gray-50 text-3xl font-bold mb-4">
+      Number Provisioning Utility
     </h1>
     <div class="mb-8">
       <label class="block mb-2 text-blue-300 font-semibold" for="input">
-        Raw List Input
+        Raw List
       </label>
       <textarea
         id="input"
@@ -15,9 +15,6 @@
       />
     </div>
     <div class="mb-8">
-      <div class="block mb-2 text-blue-300 font-semibold">
-        Allocation List Output
-      </div>
       <div v-if="provisioningListErrors.length">
         <div
           class="text-red-200 bg-red-900 p-3 rounded border border-red-600 mb-5"
@@ -30,9 +27,56 @@
           </ul>
         </div>
       </div>
-      <pre>{{ provisioningListOutput }}</pre>
+      <div class="space-y-8">
+        <div
+          v-for="(accounts, globalAreaCode) in accountsByArea"
+          :key="globalAreaCode"
+        >
+          <h3 class="text-xl mb-2 text-blue-50">
+            <span class="font-bold">{{ globalAreaCode }}</span> &ndash;
+            {{ globalAreaCodeNames[globalAreaCode] }} &ndash;
+            {{ accounts.length }}
+          </h3>
+          <div class="space-y-2">
+            <div>
+              <label
+                class="block mb-2 text-blue-300 font-semibold"
+                :for="`input-${globalAreaCode}`"
+              >
+                Numbers
+              </label>
+              <textarea
+                :id="`input-${globalAreaCode}`"
+                :name="`input-${globalAreaCode}`"
+                class="bg-gray-800 border border-gray-700 rounded p-4 w-full max-w-xl h-32 focus:outline-none focus:border-blue-500 hover:border-blue-500"
+                @input="
+                  updateLines($event.target.value, accounts, globalAreaCode)
+                "
+              />
+            </div>
+            <div>
+              <label
+                class="block text-blue-300 font-semibold"
+                :for="`input-${globalAreaCode}`"
+              >
+                Lines
+              </label>
+              <textarea
+                :id="`output-${globalAreaCode}`"
+                :name="`output-${globalAreaCode}`"
+                class="bg-gray-800 border border-gray-700 rounded p-4 w-full max-w-xl h-32 focus:outline-none focus:border-blue-500 hover:border-blue-500"
+                :value="formatLines(accounts)"
+                readonly
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mb-8">
+    <div>
+      <h2 class="text-xl mb-4 font-bold text-blue-50">
+        Number Provising Output
+      </h2>
       <label class="block mb-2 text-blue-300 font-semibold" for="input">
         Final List
       </label>
@@ -50,26 +94,30 @@
 import { ref } from "vue";
 import postcodeMapping from "./assets/postcodeMapping.json";
 
-const provisioningListOutput = ref("");
+const date = new Date();
+const today = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+/** @type {import("vue").Ref<{ [area: string]: { provisionedNumber?: string, accountNumber: number, salesOrder: number, postCode: string, numbersRequired: number }[] }>} */
+const accountsByArea = ref({});
+
 const provisioningListErrors = ref([]);
-
+const globalAreaCodeNames = ref({});
 const finalListInput = ref();
-// const finalListOutput = ref("");
-// const finalListErrors = ref([]);
 
-/** @param {string} input */
-function parseRawList(input) {
+/**
+ * @param {string} input
+ */
+function parseRawList(text) {
   const regex =
     /^(\d+)\s+(\d+)\s+(?:Line\s+\d\s+Missing\s+){1,2}([a-z]{1,2}\d{1,2}\s\d[a-z]{2})$/i;
 
-  const lines = input
+  const lines = text
     .split("\n")
     .map((value) => value.trim())
     .filter((value) => value);
 
-  /** @type {{ [area: string]: [{ accountNumber: number, salesOrder: number, postCode: string, numbersRequired: number }] }} */
-  const accountsPerArea = {};
-  const areaCodeNames = {};
+  /** @type {{ [area: string]: { accountNumber: number, salesOrder: number, postCode: string, numbersRequired: number }[] }} */
+  const accountsPerAreaCode = {};
 
   provisioningListErrors.value = [];
 
@@ -114,48 +162,84 @@ function parseRawList(input) {
 
       const globalAreaCode = areaCode.replace(/^0/, "44");
 
-      areaCodeNames[globalAreaCode] = areaName;
+      globalAreaCodeNames.value[globalAreaCode] = areaName;
 
-      if (!accountsPerArea[globalAreaCode]) {
-        accountsPerArea[globalAreaCode] = [];
+      if (!accountsPerAreaCode[globalAreaCode]) {
+        accountsPerAreaCode[globalAreaCode] = [];
       }
 
-      accountsPerArea[globalAreaCode].push({
-        accountNumber,
-        salesOrder,
-        postCode,
-        numbersRequired,
-      });
+      for (const [, lineNumber] of numbersRequired) {
+        accountsPerAreaCode[globalAreaCode].push({
+          accountNumber,
+          salesOrder,
+          postCode,
+          lineNumber,
+          globalAreaCode,
+          areaCode,
+          areaName,
+        });
+      }
     } catch (error) {
       provisioningListErrors.value.push(error.message);
     }
   }
 
-  const date = new Date();
+  // value = element
+  finalListInput.value.value = "";
 
-  const today = `${date.getFullYear()}-${
-    date.getMonth() + 1
-  }-${date.getDate()}`;
+  accountsByArea.value = accountsPerAreaCode;
+}
 
-  const finalListInputElement = finalListInput.value;
+/**
+ * @param {string} input
+ * @param {object[]} accounts
+ * @param {string} globalAreaCode
+ */
+function updateLines(text, accounts, globalAreaCode) {
+  const lines = text
+    .split("\n")
+    .map((value) => value.trim())
+    .filter((value) => value);
 
-  provisioningListOutput.value = "";
-  finalListInputElement.value = "";
+  accountsByArea.value = {
+    ...accountsByArea.value,
+    [globalAreaCode]: accounts.map((account, index) => ({
+      ...account,
+      provisionedNumber: lines[index] || "",
+    })),
+  };
 
-  for (const [globalAreaCode, lines] of Object.entries(accountsPerArea)) {
-    provisioningListOutput.value += `${globalAreaCode} - ${areaCodeNames[globalAreaCode]}\n\n`;
+  const input = document.getElementById(`output-${globalAreaCode}`);
 
-    for (const line of lines) {
-      for (const [, lineNumber] of line.numbersRequired) {
-        provisioningListOutput.value += `,${line.accountNumber},${line.salesOrder},${today}\n`;
-        finalListInputElement.value += `${line.accountNumber} ${line.salesOrder}  ${lineNumber} NEW\n`;
-      }
-    }
+  input.value = accountsByArea.value[globalAreaCode]
+    .map(
+      ({ provisionedNumber, accountNumber, salesOrder }) =>
+        `${provisionedNumber},${accountNumber},${salesOrder},${today}`
+    )
+    .join("\n");
 
-    provisioningListOutput.value += `\n`;
-  }
+  updateFinalList();
+}
 
-  provisioningListOutput.value = provisioningListOutput.value.trim();
-  finalListInputElement.value = finalListInputElement.value.trim();
+/**
+ * @param {{ provisionedNumber?: string, accountNumber: string, salesOrder: string }[]} accounts
+ */
+function formatLines(accounts) {
+  return accounts
+    .map(
+      ({ provisionedNumber, accountNumber, salesOrder }) =>
+        `${provisionedNumber || ""},${accountNumber},${salesOrder},${today}`
+    )
+    .join("\n");
+}
+
+function updateFinalList() {
+  finalListInput.value.value = Object.values(accountsByArea.value)
+    .flat()
+    .map(
+      ({ accountNumber, salesOrder, provisionedNumber, lineNumber }) =>
+        `${accountNumber} ${salesOrder} ${provisionedNumber || ""} ${lineNumber} NEW`
+    )
+    .join("\n");
 }
 </script>
