@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  @apply min-h-screen;
+}
+
 body {
   @apply bg-gray-900 text-gray-300;
+}
+
+.prism-editor__line-number {
+  @apply text-gray-500;
 }
