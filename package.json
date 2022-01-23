@@ -9,6 +9,7 @@
   "dependencies": {
     "sanitize-html": "^2.6.1",
     "vue": "^3.2.25",
+    "vue-clipboard3": "^1.0.1",
     "vue-prism-editor": "^2.0.0-alpha.2"
   },
   "devDependencies": {

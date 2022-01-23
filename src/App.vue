@@ -61,7 +61,7 @@
               }}/{{ accounts.length }}
             </span>
           </h3>
-          <div class="space-y-2">
+          <div class="space-y-3">
             <div>
               <label
                 class="block mb-2 text-blue-300 font-semibold"
@@ -95,12 +95,24 @@
               </div>
             </div>
             <div>
-              <label
-                class="block mb-2 text-blue-300 font-semibold"
-                :for="`input-${globalAreaCode}`"
-              >
-                Lines
-              </label>
+              <div class="flex justify-between mb-2">
+                <label
+                  class="text-blue-300 font-semibold"
+                  :for="`input-${globalAreaCode}`"
+                >
+                  Output
+                </label>
+                <button
+                  class="text-xs font-bold h-6 px-1.5 rounded border border-blue-900 bg-blue-900/50 hover:border-blue-700 focus:text-blue-50 focus:bg-blue-600"
+                  @click="
+                    copy(
+                      document.getElementById(`output-${globalAreaCode}`).value
+                    )
+                  "
+                >
+                  Copy
+                </button>
+              </div>
               <textarea
                 :id="`output-${globalAreaCode}`"
                 :name="`output-${globalAreaCode}`"
@@ -126,12 +138,20 @@
           {{ provisionedAccountTotal }}/{{ accountTotal }}
         </span>
       </h2>
-      <label class="block mb-2 text-blue-300 font-semibold" for="input">
-        Final List
-      </label>
+      <div class="flex justify-between mb-2">
+        <label class="text-blue-300 font-semibold" for="input">
+          Final List
+        </label>
+        <button
+          class="text-xs font-bold h-6 px-1.5 rounded border border-blue-900 bg-blue-900/50 hover:border-blue-700 focus:text-blue-50 focus:bg-blue-600"
+          @click="copy(document.getElementById('output').value)"
+        >
+          Copy
+        </button>
+      </div>
       <textarea
-        id="input"
-        name="input"
+        id="output"
+        name="output"
         class="bg-gray-800 border border-gray-700 rounded p-4 w-full h-64 focus:outline-none focus:border-blue-500 cursor-not-allowed"
         ref="finalListInput"
         readonly
@@ -141,9 +161,12 @@
 </template>
 
 <script setup>
+// this is bad, but who cares it's a temporary quick hacky tool
+
 import { PrismEditor } from "vue-prism-editor";
 import { ref } from "vue";
 import sanitizeHtml from "sanitize-html";
+import useClipboard from "vue-clipboard3";
 import postcodeMapping from "./assets/postcodeMapping.json";
 
 import "vue-prism-editor/dist/prismeditor.min.css";
@@ -152,13 +175,15 @@ import "vue-prism-editor/dist/prismeditor.min.css";
  * @typedef {{ accountNumber: string, salesOrder: string, lineNumber: string, provisionedNumber?: string }} Account
  */
 
+const { toClipboard: copy } = useClipboard();
+
 const date = new Date();
 const today = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-// this is bad, but who cares it's a temporary quick hacky tool
-
 const accountTotal = ref(0);
 const provisionedAccountTotal = ref(0);
+
+const document = window.document;
 
 /** @type {import("vue").Ref<{ [area: string]: Account[] }>} */
 const accountsByArea = ref({});
@@ -323,13 +348,8 @@ function updateFinalList() {
  * @param {string} code
  */
 function errorHighlight(code) {
-  const lines = code.split("\n");
-
-  console.log(lines, [
-    ...provisioningListErrors.value.map((value) => [...value]),
-  ]);
-
-  return lines
+  return code
+    .split("\n")
     .map((line, index) =>
       line.trim().length
         ? `<span class="${
