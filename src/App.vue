@@ -14,8 +14,8 @@
         @input="parseRawList($event.target.value)"
         @click="$event.target.getElementsByTagName('textarea')?.[0]?.focus()"
         v-model="code"
-        :highlight="errorHighlight"
-        insert-spaces="false"
+        :highlight="inputHighlight"
+        :insert-spaces="false"
         ignore-tab-key
         line-numbers
       />
@@ -157,6 +157,7 @@
         readonly
       />
     </div>
+    <!-- <pre class="mt-8">{{ JSON.stringify(accountsByArea, null, 2) }}</pre> -->
   </div>
 </template>
 
@@ -205,9 +206,7 @@ const regex =
  */
 function parseRawList(text) {
   /** @type {string[]} */
-  const lines = text
-    .split("\n")
-    .map((value) => value.trim());
+  const lines = text.split("\n").map((value) => value.trim());
 
   /** @type {{ [area: string]: Account[] }} */
   const accountsPerAreaCode = {};
@@ -346,21 +345,54 @@ function updateFinalList() {
 /**
  * @param {string} code
  */
-function errorHighlight(code) {
+function inputHighlight(code) {
   return code
     .split("\n")
     .map((line, index) =>
       line.trim().length
-        ? `<span class="${
-            provisioningListErrors.value.find(
-              ([errorIndex]) => index === errorIndex
-            )
-              ? "underline decoration-wavy decoration-yellow-500 bg-yellow-900/50"
-              : "white"
-          }">${sanitizeHtml(line)}</span>`
+        ? provisioningListErrors.value.find(
+            ([errorIndex]) => index === errorIndex
+          )
+          ? `<span class="underline decoration-wavy decoration-yellow-500 bg-yellow-900/50">${sanitizeHtml(
+              line
+            )}</span>`
+          : captureGroupHighlight(line)
         : line
     )
     .join("\n");
+}
+
+/**
+ * @param {string} line
+ */
+function captureGroupHighlight(line) {
+  const match = line.match(regex);
+
+  console.log(line, match);
+
+  if (match) {
+    const colors = [
+      "text-green-200",
+      "",
+      "text-cyan-200",
+      "",
+      "text-yellow-200",
+      "text-purple-200",
+    ];
+
+    return line
+      .match(
+        /^(\d+)(\s+)(\d+)(\s+)((?:Line\s+\d\s+Missing\s+)+)([a-z]{1,2}\d{1,2}\s\d[a-z]{2})$/i
+      )
+      .splice(1)
+      .map(
+        (part, index) =>
+          `<span class="${colors[index]}">${sanitizeHtml(part)}</span>`
+      )
+      .join("");
+  }
+
+  return sanitizeHtml(line);
 }
 
 /**
