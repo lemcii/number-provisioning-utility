@@ -23,14 +23,14 @@
     <div class="mb-8">
       <div v-if="provisioningListErrors.length">
         <div
-          class="text-red-200 bg-red-900/75 p-3 rounded border border-red-600 mb-5"
+          class="text-yellow-200 bg-yellow-900/75 p-3 rounded border border-yellow-600 mb-5"
         >
           <h3 class="font-bold mb-2 text-white">
             {{ provisioningListErrors.length }} Error(s) Found
           </h3>
           <ul>
             <li v-for="error in provisioningListErrors">
-              <span class="font-semibold text-red-100">
+              <span class="font-semibold text-yellow-100">
                 Line {{ error[0] + 1 }}
               </span>
               &ndash; {{ error[1] }}
@@ -52,7 +52,7 @@
                 accounts.filter(({ provisionedNumber }) => provisionedNumber)
                   .length
                   ? 'text-blue-400'
-                  : 'text-red-500'
+                  : 'text-yellow-500'
               "
             >
               {{
@@ -77,7 +77,7 @@
                 :class="
                   getInputLines(`input-${globalAreaCode}`) > 0 &&
                   accounts.length !== getInputLines(`input-${globalAreaCode}`)
-                    ? 'text-red-100 border-red-900 hover:border-red-500 focus:border-red-500 bg-red-900/25'
+                    ? 'text-yellow-100 border-yellow-900 hover:border-yellow-500 focus:border-yellow-500 bg-yellow-900/25'
                     : 'text-white'
                 "
                 @input="
@@ -89,7 +89,7 @@
                   getInputLines(`input-${globalAreaCode}`) &&
                   accounts.length !== getInputLines(`input-${globalAreaCode}`)
                 "
-                class="mt-1 mb-2 text-red-500"
+                class="mt-1 mb-2 text-yellow-500"
               >
                 Invalid line quantity
               </div>
@@ -132,7 +132,7 @@
           :class="
             provisionedAccountTotal === accountTotal
               ? 'text-blue-400'
-              : 'text-red-500'
+              : 'text-yellow-500'
           "
         >
           {{ provisionedAccountTotal }}/{{ accountTotal }}
@@ -356,7 +356,7 @@ function errorHighlight(code) {
             provisioningListErrors.value.find(
               ([errorIndex]) => index === errorIndex
             )
-              ? "underline decoration-wavy decoration-red-500 bg-red-900/50"
+              ? "underline decoration-wavy decoration-yellow-500 bg-yellow-900/50"
               : "white"
           }">${sanitizeHtml(line)}</span>`
         : line
