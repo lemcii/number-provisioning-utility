@@ -207,8 +207,7 @@ function parseRawList(text) {
   /** @type {string[]} */
   const lines = text
     .split("\n")
-    .map((value) => value.trim())
-    .filter((value) => value);
+    .map((value) => value.trim());
 
   /** @type {{ [area: string]: Account[] }} */
   const accountsPerAreaCode = {};
