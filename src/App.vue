@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8">
+  <div class="p-8 mx-auto max-w-xl">
     <h1 class="text-gray-50 text-3xl font-bold mb-4">
       Number Provisioning Utility
     </h1>
@@ -10,7 +10,7 @@
       <prism-editor
         id="input"
         name="input"
-        class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full max-w-xl focus:outline-none focus:border-blue-500 hover:border-blue-500 cursor-text"
+        class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full focus:outline-none focus:border-blue-500 hover:border-blue-500 cursor-text"
         @input="parseRawList($event.target.value)"
         @click="$event.target.getElementsByTagName('textarea')?.[0]?.focus()"
         v-model="code"
@@ -73,7 +73,7 @@
                 :id="`input-${globalAreaCode}`"
                 :name="`input-${globalAreaCode}`"
                 :ref="`input-${globalAreaCode}`"
-                class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full max-w-xl h-32 focus:outline-none focus:border-blue-500 hover:border-blue-500"
+                class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full h-32 focus:outline-none focus:border-blue-500 hover:border-blue-500"
                 :class="
                   getInputLines(`input-${globalAreaCode}`) > 0 &&
                   accounts.length !== getInputLines(`input-${globalAreaCode}`)
@@ -104,7 +104,7 @@
               <textarea
                 :id="`output-${globalAreaCode}`"
                 :name="`output-${globalAreaCode}`"
-                class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full max-w-xl h-32 focus:outline-none focus:border-blue-500 cursor-not-allowed"
+                class="bg-gray-800 border border-gray-700 rounded px-4 py-3 w-full h-32 focus:outline-none focus:border-blue-500 cursor-not-allowed"
                 :value="formatLines(accounts)"
                 readonly
               />
@@ -132,7 +132,7 @@
       <textarea
         id="input"
         name="input"
-        class="bg-gray-800 border border-gray-700 rounded p-4 w-full max-w-xl h-64 focus:outline-none focus:border-blue-500 cursor-not-allowed"
+        class="bg-gray-800 border border-gray-700 rounded p-4 w-full h-64 focus:outline-none focus:border-blue-500 cursor-not-allowed"
         ref="finalListInput"
         readonly
       />
