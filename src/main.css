@@ -10,6 +10,11 @@ body {
   @apply bg-gray-900 text-gray-300;
 }
 
+textarea,
+.prism-editor__container {
+  @apply font-mono;
+}
+
 .prism-editor__line-number {
   @apply text-gray-500;
 }
